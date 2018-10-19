@@ -1,0 +1,13 @@
+{
+  "name": "samples-signalr",
+  "version": "1.0.1",
+  "description": "",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aspnet/signalr": "^1.0.4"
+  },
+  "devDependencies": {}
+}

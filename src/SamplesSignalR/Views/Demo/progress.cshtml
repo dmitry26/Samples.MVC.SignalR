@@ -1,0 +1,198 @@
+﻿
+
+
+@section adhoc_Scripts_Top {
+    <script src="~/lib/signalr/signalr.js"></script>
+}
+
+<h1 class="text-center">
+    Monitoring remote tasks
+    <button class="btn btn-danger"
+            id="openConnectionButton"
+            onclick="openConnection()">
+        Open connection
+    </button>
+    <button class="btn btn-danger"
+            id="dropConnectionButton"
+            style="display: none;"
+            onclick="dropConnection()">
+        Drop connection
+        <span class="badge" id="count">0</span>
+    </button>
+</h1>
+<hr />
+<button class="btn btn-primary" disabled="disabled"
+        id="startButton"
+        onclick="startTask()">
+    <span class="fa fa-play"></span>
+    Start remote task
+</button>
+<button class="btn btn-primary"
+        id="stopButton"
+        style="display: none;"
+        onclick="stopTask()">    
+    Stop remote task
+</button>
+
+<div clas="alert alert-info">
+    <span id="msg"></span>
+    <span class="badge" id="connId"></span>
+</div>
+
+<div id="notification" style="display:none">
+    <h3>Amount of work done <span class="label label-info" id="workDone">0</span>%</h3>
+
+    <div class="progress">
+        <div class="progress-bar" role="progressbar"
+             aria-valuenow="0"
+             aria-valuemin="0"
+             aria-valuemax="100">
+            <span class="sr-only" id="workDone"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // SignalR bootstrap
+    var progressConnectionId = "";
+    var progressConnection;
+</script>
+
+<script>
+    // Helper functions added for test purposes
+    function openConnection() {
+        progressConnection = new signalR.HubConnectionBuilder()
+            .withUrl('/progressDemo')
+            .build();
+
+        progressConnection.on("updateCount", (num) => {
+            $("#count").html(num);
+        });
+
+        progressConnection.on("initProgressBar", () => {
+            setProgress(0);
+            $("#notification").show();
+        });
+
+        progressConnection.on("updateProgressBar", (perc) => {
+            setProgress(perc);
+        });
+
+        progressConnection.on("clearProgressBar", () => {
+            setProgress(100);
+            window.setTimeout(() => {
+                onStopTask();
+            }, 2000);
+        });
+
+        progressConnection.onclose((err) => {
+            onConnectionClosed();
+        });
+
+        progressConnection
+            .start()
+            .then(() => {
+                progressConnection.invoke('getConnectionId')
+                    .then((connectionId) => {
+                        progressConnectionId = connectionId;
+                        $("#connId").html(connectionId);
+                        $("#stopButton").hide();
+                        $("#startButton").removeAttr("disabled");                       
+                        $("#openConnectionButton").hide();
+                        $("#dropConnectionButton").show();
+                        $("#msg").html("Connection established");
+                    });
+
+            })
+            .catch(() => {
+                $("#msg").html("Error while establishing connection");
+            });
+    }
+
+    function setProgress(percentage) {
+        $("#workDone").text(percentage);
+        $('.progress-bar').css('width', percentage + '%').attr('aria-valuenow', percentage);
+
+        // Edit page title
+        document.title = percentage + "% done";
+    }
+
+    function onStopTask() {
+        $("#notification").hide();
+        document.title = "REMOTE TASK";
+        $("#stopButton").hide();
+        $("#startButton").show();       
+    }
+
+    function dropConnection() {
+        progressConnection
+            .stop()
+            .then(() => {               
+                onConnectionClosed();
+            })
+            .catch(() => {
+                $("#msg").html("Error while dropping connection");
+        });        
+    }
+
+    function onConnectionClosed() {
+        progressConnectionId = "";
+        $("#connId").html(progressConnectionId);
+        $("#stopButton").hide();
+        $("#startButton").attr("disabled", "disabled");
+        $("#dropConnectionButton").hide();
+        $("#openConnectionButton").show();
+        $("#msg").html("");
+        $("#count").html("");
+        onStopTask();
+    }
+
+    function startTask() {
+        $("#startButton").hide();
+        $("#stopButton").show();
+        progressConnection.invoke('updateProgress').then(() => {
+        });
+    }
+    function stopTask() {
+        progressConnection.invoke('stopTask').then(() => {
+            onStopTask();
+        });
+    }
+</script>
+
+<script>
+    // Automatically establish a connection upon loading. You can decide to do
+    // that also on demand. It's up to you, in the end.   
+    openConnection();
+
+    /*
+    progressConnection.on("updateCount", (num) => {
+        $("#count").html(num);
+    });
+
+    progressConnection.on("initProgressBar", () => {
+        setProgress(0);
+        $("#notification").show();
+    });
+
+    progressConnection.on("updateProgressBar", (perc) => {
+        setProgress(perc);
+    });
+
+    progressConnection.on("clearProgressBar", () => {
+        setProgress(100);
+        window.setTimeout(function () {
+            $("#notification").hide();
+            document.title = "REMOTE TASK";
+        }, 2000);
+    });
+
+    function setProgress(percentage) {
+        $("#workDone").text(percentage);
+        $('.progress-bar').css('width', percentage + '%').attr('aria-valuenow', percentage);
+
+        // Edit page title
+        document.title = percentage + "% done";
+    }*/
+</script>
+

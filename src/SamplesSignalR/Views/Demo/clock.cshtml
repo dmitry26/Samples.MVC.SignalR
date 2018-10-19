@@ -1,0 +1,102 @@
+﻿@model SamplesSignalR.Models.ViewModelBase
+
+@section adhoc_Scripts_Top {
+    <script src="~/lib/signalr/signalr.min.js"></script>
+}
+
+<h1 class="text-center">
+    CURRENT TIME
+</h1>
+<hr />
+<div id="msg"></div>
+
+
+<div>
+    <h1 id="time">???</h1>
+    <button class="btn btn-danger" id="btnStart" style="display:none" onclick="restartClock()">START</button>
+    <button class="btn btn-danger" id="btnStop" style="display:none" onclick="stopClock()">STOP</button>
+</div>
+
+<script>
+    // SignalR bootstrap
+    var clockConnection;
+    var subscription;
+    var subject;
+    openConnection();
+
+    function openConnection() {
+        $("#msg").html("Preparing...");
+
+        clockConnection = new signalR.HubConnectionBuilder()
+            .withUrl('/clockDemo')
+            .build();
+
+        clockConnection.on("clockStarted", () => {
+            $("#btnStop").show();
+            $("#btnStart").hide();
+            startClock();
+        });
+
+        clockConnection.on("clockStopped", () => {
+            $("#btnStop").hide();
+            $("#btnStart").show();
+        });
+
+        clockConnection.onclose((err) => {
+            onConnectionClosed();
+        });
+
+        clockConnection
+            .start()
+            .then(() => {
+                clockConnection.invoke("getConnectionId")
+                    .then((connectionId)  => {
+                        $("#msg").html("Connection established: " + connectionId);
+                        clockConnection.invoke("start");
+                    });
+            })
+            .catch(() => {
+                alert("Error while establishing connection");
+            });
+    }
+
+    function startClock() {
+        subject = clockConnection.stream("Tick");
+        subscription = subject.subscribe({            
+            next: onClockUpdated,
+            error: (err) => {
+                console.log(err);
+            },
+            complete: () => { }          
+        });
+    }
+
+    function restartClock() {
+        openConnection();
+    }
+
+    /*function stopClock() {        
+        subscription.dispose();
+        clockConnection.invoke("stop");        
+        $("#msg").html("Connection closed.");
+    }*/
+
+    function stopClock() {
+        subscription.dispose(); // prevent running observer: error
+        clockConnection.stop().then(() => {
+            onConnectionClosed();
+        });
+    }
+
+    function onClockUpdated(currentTime) {
+        $("#time").html(currentTime);
+    }
+
+    function onConnectionClosed() {
+        $("#msg").html("Connection closed.");
+        $("#btnStop").hide();
+        $("#btnStart").show();
+    }
+</script>
+
+

@@ -1,0 +1,9 @@
+bin/
+obj/
+*.nupkg
+.vs
+packages/
+node_modules/
+src/**/logs
+src/**/Properties/launchSettings.json
+src/**/appsettings.Development.json
