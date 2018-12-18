@@ -9,7 +9,11 @@
     UI Updater
 </h1>
 <hr />
-<div id="msg"></div>
+<div clas="alert alert-info">
+    <span id="msg"></span>
+    <span class="badge" id="connId"></span>
+</div>
+
 
 <nav class="navbar navbar-default" role="navigation">
     <div class="container">
@@ -42,7 +46,7 @@
 
     function openConnection() {
         $("#msg").html("Preparing...");
-       
+
         updaterConnection = new signalR.HubConnectionBuilder()
             .withUrl('/updaterDemo')
             .build();
@@ -51,9 +55,10 @@
             .start()
             .then(() => {
                 updaterConnection.invoke("getConnectionId")
-                    .then((connectionId) => {
-                        $("#msg").html("Connection established: " + connectionId);                        
-                    });                
+                    .then((connectionId) => { 
+                        $("#msg").html("Connection established: ");
+                        $("#connId").html(connectionId);
+                    });
             })
             .catch(() => {
                 alert("Error while establishing connection");

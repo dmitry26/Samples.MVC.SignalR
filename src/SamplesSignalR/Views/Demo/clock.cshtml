@@ -8,8 +8,10 @@
     CURRENT TIME
 </h1>
 <hr />
-<div id="msg"></div>
-
+<div clas="alert alert-info">
+    <span id="msg"></span>
+    <span class="badge" id="connId"></span>
+</div>
 
 <div>
     <h1 id="time">???</h1>
@@ -51,7 +53,8 @@
             .then(() => {
                 clockConnection.invoke("getConnectionId")
                     .then((connectionId)  => {
-                        $("#msg").html("Connection established: " + connectionId);
+                        $("#msg").html("Connection established: ");
+                        $("#connId").html(connectionId);
                         clockConnection.invoke("start");
                     });
             })
@@ -74,13 +77,7 @@
     function restartClock() {
         openConnection();
     }
-
-    /*function stopClock() {        
-        subscription.dispose();
-        clockConnection.invoke("stop");        
-        $("#msg").html("Connection closed.");
-    }*/
-
+    
     function stopClock() {
         subscription.dispose(); // prevent running observer: error
         clockConnection.stop().then(() => {
