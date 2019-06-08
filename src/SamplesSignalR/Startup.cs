@@ -30,7 +30,7 @@ namespace SamplesSignalR
 			services.AddTransient<ProgressService>();			
 			services.AddSignalR();
 
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
